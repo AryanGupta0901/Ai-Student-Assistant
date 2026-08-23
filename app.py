@@ -202,9 +202,10 @@ def cm_get_embedding_model(provider: str):
                 "Missing Google API key. Set GOOGLE_API_KEY in your Streamlit secrets "
                 "(Manage app -> Settings -> Secrets) or your .env file."
             )
-        # NOTE: 'models/embedding-001' is deprecated/unavailable on many accounts.
-        # 'models/text-embedding-004' is the current supported Gemini embedding model.
-        return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
+        # NOTE: both 'models/embedding-001' and 'models/text-embedding-004' have been
+        # superseded. 'gemini-embedding-001' is the current generally-available
+        # Gemini embedding model (as of mid-2026).
+        return GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=api_key)
     return MistralAIEmbeddings()
 
 @st.cache_resource(show_spinner=False)
@@ -270,8 +271,10 @@ def cm_add_chunks_to_store(chunks, provider: str):
             ) from e
         if provider == "Google Gemini" and any(kw in msg for kw in ("404", "not found", "NOT_FOUND")):
             raise RuntimeError(
-                "Google Gemini embedding model not found — it may have been deprecated. "
-                f"Try 'models/text-embedding-004'. Raw error: {msg}"
+                "Google Gemini embedding model not found — it may have been deprecated or "
+                "unavailable for your API key/project. Run ListModels (see Gemini API docs) "
+                "to see which embedding models your key currently supports, and update the "
+                f"model name in cm_get_embedding_model accordingly. Raw error: {msg}"
             ) from e
         if any(kw in msg for kw in ("429", "RESOURCE_EXHAUSTED", "quota", "rate limit")):
             raise RuntimeError(
